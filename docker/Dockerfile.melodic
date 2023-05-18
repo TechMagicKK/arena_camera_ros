@@ -1,0 +1,94 @@
+###################################################################
+# Base image and environment
+###################################################################
+FROM ros:melodic-ros-base
+# FROM turlucode/ros-noetic:cuda11.4.2-cudnn8
+
+ARG ROS_VERSION=melodic
+ARG ROS_PYTHON=python
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+
+###################################################################
+# Install system tools
+###################################################################
+RUN apt-get update && apt-get install -y build-essential curl git \
+    ca-certificates gnupg gnupg2 lsb-release pkg-config \
+    python-dev python-pip python-numpy python-matplotlib \
+    python-empy python-tk python-osrf-pycommon g++  gfortran  libgflags-dev \
+    libopencv-dev libopenblas-dev libopenmpi-dev openmpi-bin openmpi-common \
+    libjpeg-dev zlib1g-dev libpython-dev libavcodec-dev libavformat-dev \
+    libswscale-dev libtbb2 libtbb-dev libpostproc-dev libeigen3-dev libglew-dev \
+    libgtk2.0-dev libhdf5-dev libprotobuf-dev protobuf-compiler libboost-all-dev \
+    libx264-dev libx265-dev
+
+
+###################################################################
+# Install system tools
+###################################################################
+ENV OPENCV_VERSION 4.5.0
+
+RUN mkdir -p opencv-build opencv-$OPENCV_VERSION/build
+RUN curl -L https://github.com/opencv/opencv/archive/$OPENCV_VERSION.tar.gz | \
+    tar xz && curl -L https://github.com/opencv/opencv_contrib/archive/$OPENCV_VERSION.tar.gz | tar xz
+
+WORKDIR opencv-$OPENCV_VERSION/build
+
+RUN cmake -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib-$OPENCV_VERSION/modules \
+    -D BUILD_TESTS=OFF \
+    -D BUILD_PERF_TESTS=OFF \
+    -D CMAKE_BUILD_TYPE=Release \
+    -D CMAKE_INSTALL_PREFIX=/usr/local \
+    -D OPENCV_GENERATE_PKGCONFIG=ON \
+    -D WITH_PYTHON=ON \
+    -D BUILD_opencv_gpu=OFF \
+    -D WITH_CUDA=OFF \
+    -D INSTALL_PYTHON_EXAMPLES=OFF \
+    -D BUILD_opencv_python2=ON \
+    -D BUILD_opencv_python3=OFF \
+    -D PYTHON_DEFAULT_EXECUTABLE=python \
+    -D BUILD_opencv_highgui=ON \
+    -D WITH_EIGEN=ON \
+    -D EIGEN_INCLUDE_PATH=/usr/include/eigen3 \
+    -D WITH_TBB=OFF \
+    -D WITH_1394=OFF \
+    -D BUILD_EXAMPLES=OFF \
+    -D BUILD_DOCS=OFF \
+    ..
+RUN make -j$(nproc) && make install
+
+
+###################################################################
+# Install base ROS tools
+###################################################################
+RUN apt-get update && apt-get install -y --fix-missing \
+    $ROS_PYTHON-rosdep $ROS_PYTHON-catkin-tools \
+    $ROS_PYTHON-rosinstall \
+    $ROS_PYTHON-rosinstall-generator \
+    $ROS_PYTHON-osrf-pycommon $ROS_PYTHON-wstool \
+    ros-$ROS_VERSION-roslint ros-$ROS_VERSION-catkin \
+    ros-$ROS_VERSION-geometry ros-$ROS_VERSION-geometry2 \
+    ros-$ROS_VERSION-rqt-common-plugins
+
+
+###################################################################
+# Install ROS packages
+###################################################################
+# WORKDIR /root/catkin_ws/src
+# RUN rosdep update
+# RUN rosdep install -y --from-paths ./src --ignore-src -yri --rosdistro $ROS_VERSION
+
+
+####################################################################
+## Setup ROS runtime environment
+####################################################################
+WORKDIR /app
+COPY . /app
+
+RUN /app/docker/catkin_build.sh $ROS_VERSION
+
+WORKDIR /root/catkin_ws
+RUN echo "source /opt/ros/${ROS_VERSION}/setup.bash" >> /root/.bashrc
+RUN echo "source /root/catkin_ws/devel/setup.bash" >> /root/.bashrc
+

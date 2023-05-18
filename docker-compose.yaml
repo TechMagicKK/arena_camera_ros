@@ -1,0 +1,41 @@
+version: "3"
+
+x-container: &base-config
+  image: helios.dev
+  build:
+    context: ./
+    dockerfile: docker/Dockerfile.melodic
+
+  network_mode: host
+  ipc: host
+
+  tty: true
+  privileged: true
+  environment:
+    - PYTHONUNBUFFERED=1
+    - TZ=Asia/Tokyo
+    - QT_X11_NO_MITSHM=1
+    - DISPLAY=${DISPLAY}
+
+  env_file:
+    - .env
+
+  deploy:
+    resources:
+      reservations:
+        devices:
+          - driver: nvidia
+            count: 1
+            capabilities: [gpu]
+
+  volumes:
+    - "/tmp/.X11-unix:/tmp/.X11-unix"
+    - "./:/app/"
+
+
+services:
+
+  dev:
+    <<: *base-config
+    # restart: always
+    command: sleep infinity

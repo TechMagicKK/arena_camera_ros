@@ -3,8 +3,8 @@
 #
 # MAIN VARS TO CHANGE
 #
-ARENA_INSTALLATION_ROOT="$HOME/software/OutputDirectory/Linux"
-ARENA_ROS_WORDSPACE_TO_SETUP="$HOME/arena_camera_ros/catkin_ws" #change to workspace location
+ARENA_INSTALLATION_ROOT="/app/ArenaSDK_Linux_x64"
+ARENA_ROS_WORDSPACE_TO_SETUP="$HOME/catkin_ws" #change to workspace location
 INSTALL_ROS=1
 
 
@@ -47,24 +47,26 @@ fi
 if [ $INSTALL_ROS -eq 1 ]; then
 
     # Set up your system to acquire software from packages.ros.org
-    sudo echo "deb http://packages.ros.org/ros/ubuntu $CURR_OS main" > /etc/apt/sources.list.d/ros-latest.list
+    # sudo echo "deb http://packages.ros.org/ros/ubuntu $CURR_OS main" > /etc/apt/sources.list.d/ros-latest.list
     # Use apt-key to install the Open Robotics key to your list of trusted keys.
     # to remove the key at uninstaltion time run `sudo apt-key del F42ED6FBAB17C654`
-    sudo apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
+    # sudo apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
     # Install ROS Desktop.
-    sudo apt-get update
-    sudo apt-get install ros-$ROS_DIS-desktop-full
+    # sudo apt-get update
+    # sudo apt-get install ros-$ROS_DIS-desktop-full
     
     # Setup system dependencies for ROS.
     
     # NOTE: might need sudo apt-get install python[3]-rosdep
-    sudo rosdep init
-    sudo rosdep fix-permissions
+    rosdep init
+    rosdep fix-permissions
     rosdep update
+    rosdep install --from-paths src --ignore-src -r -y
+
 
     # Setups ROS environment variables
-    #echo "# load ROS env vars" >> ~/.bashrc
-    #echo "source /opt/ros/$ROS_DIS/setup.bash" >> ~/.bashrc
+    # echo "# load ROS env vars" >> ~/.bashrc
+    # echo "source /opt/ros/$ROS_DIS/setup.bash" >> $HOME/.bashrc
 
     #echo "# load ROS env vars" >> ~/.zshrc
     #echo "source /opt/ros/$ROS_DIS/setup.zsh" >> ~/.zshrc
@@ -94,10 +96,10 @@ fi
 # Set up your ARENA_ROOT environment variable. This
 # environment variable should be the path where you have
 # installed Arena SDK.
-#echo "export ARENA_ROOT=$ARENA_INSTALLATION_ROOT">> ~/.bashrc
-#echo "export ARENA_ROOT=$ARENA_INSTALLATION_ROOT">> ~/.zshrc
+echo "export ARENA_ROOT=$ARENA_INSTALLATION_ROOT" >> $HOME/.bashrc
+# echo "export ARENA_ROOT=$ARENA_INSTALLATION_ROOT">> ~/.zshrc
 # would not have an effect if script is not run in intractive mode
-#source ~/.bashrc
+# source $HOME/.bashrc
 
 ############################################################
 # Workspace section
