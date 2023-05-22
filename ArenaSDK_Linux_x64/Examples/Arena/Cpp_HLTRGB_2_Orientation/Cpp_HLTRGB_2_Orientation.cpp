@@ -54,11 +54,14 @@
 #define TIMEOUT 2000
 
 // calibration values file name
-#define FILE_NAME_IN "tritoncalibration.yml"
+#define FILE_NAME_IN "../Cpp_HLTRGB_1_Calibration/tritoncalibration.yml"
 
 // orientation values file name
 #define FILE_NAME_OUT "orientation.yml"
 
+// distroted debug
+#define FILE_NAME_RGB_distorted "distorted_rgb.png"
+#define FILE_NAME_RGB_undistorted "undistorted_rgb.png"
 // =-=-=-=-=-=-=-=-=-
 // =-=- HELPERS -=-=-
 // =-=-=-=-=-=-=-=-=-
@@ -277,6 +280,13 @@ void CalculateAndSaveOrientationValues(Arena::IDevice* pDeviceTRI, Arena::IDevic
 
 	getImageTRI(pDeviceTRI, imageMatrixTRI);
 
+  // NOTE: need to change imageMatrixTRI to undistorted image here.
+  cv::Mat undistortedImageMatrix;
+  cv::undistort(imageMatrixTRI, undistortedImageMatrix, cameraMatrix, distCoeffs);
+
+  cv::imwrite(FILE_NAME_RGB_distorted, imageMatrixTRI);
+  cv::imwrite(FILE_NAME_RGB_undistorted, undistortedImageMatrix);
+
 	// Calculate orientation values
 	std::cout << TAB1 << "Calculate orientation values\n";
 
@@ -294,7 +304,7 @@ void CalculateAndSaveOrientationValues(Arena::IDevice* pDeviceTRI, Arena::IDevic
 	// find TRI calibration points
 	std::cout << TAB2 << "Find points in TRI image\n";
 	
-	findCalibrationPointsTRI(imageMatrixTRI, gridCentersTRI);
+	findCalibrationPointsTRI(undistortedImageMatrix, gridCentersTRI);
 	
 	if (gridCentersTRI.size() != 20)
 		throw std::logic_error("Unable to find points in TRI image\n");

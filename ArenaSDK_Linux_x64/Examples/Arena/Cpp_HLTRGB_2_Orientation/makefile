@@ -2,6 +2,6 @@ TARGET = Cpp_HLTRGB_2_Orientation
 
 OPENCV_INC_PATH = -I/usr/local/include/opencv4
 OPENCV_LIB_PATH = -L/usr/local/lib
-OPENCV_LIBS = -lopencv_core -lopencv_features2d -lopencv_imgproc -lopencv_calib3d -lopencv_videoio
+OPENCV_LIBS = -lopencv_core -lopencv_imgcodecs -lopencv_features2d -lopencv_imgproc -lopencv_calib3d -lopencv_videoio
 
 include ../common.mk

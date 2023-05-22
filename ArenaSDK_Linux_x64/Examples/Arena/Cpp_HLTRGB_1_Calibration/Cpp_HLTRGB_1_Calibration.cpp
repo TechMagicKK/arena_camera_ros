@@ -267,6 +267,9 @@ static bool calculate(Settings& s, cv::Size& imageSize, cv::Mat& cameraMatrix, c
 
 	totalAvgErr = computeReprojectionErrors(objectPoints, imagePoints, rvecs, tvecs, cameraMatrix, distCoeffs, reprojErrs, s.useFisheye);
 
+  std::cout << "RMS: " << rms << std::endl;
+  std::cout << "AvgError: " << totalAvgErr << std::endl;
+
 	return ok;
 }
 
@@ -375,7 +378,8 @@ void CalculateAndSaveCalibrationValues(Arena::IDevice* pDevice)
 		std::cout << TAB2 << attempts << " attempts, " << images << " images, " << gridCentersFound << " circles found, " << successes << " calibration points\r";
 
 		// sleep between images
-		std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_MS));		
+		// std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_MS));		
+    std::getchar();
 	};
 
 	// Calculate camera matrix and distance coefficients
