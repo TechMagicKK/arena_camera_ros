@@ -1,6 +1,0 @@
-TARGET = Cpp_Callback_OnDeviceDisconnected
-
-include ../common.mk
-
-
-
