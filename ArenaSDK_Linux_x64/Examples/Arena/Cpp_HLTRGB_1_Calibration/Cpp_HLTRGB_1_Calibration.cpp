@@ -56,7 +56,7 @@
 #define TIMEOUT 200
 
 // number of calibration points to compare
-#define NUM_IMAGES 10
+#define NUM_IMAGES 8
 
 // calibration values file name
 #define FILE_NAME "tritoncalibration.yml"
