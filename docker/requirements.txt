@@ -1,0 +1,5 @@
+numpy
+tenacity
+matplotlib
+typer
+opencv-python
