@@ -13,7 +13,7 @@ device_user_id: "color"
 #  from the ROS-CameraInfoManager:
 #  http://docs.ros.org/api/camera_info_manager/html/classcamera__info__manager_
 #  1_1CameraInfoManager.html#details
-camera_info_url: "file:///app/config/orientation.yaml"
+camera_info_url: "file:///app/config/cam_info.yaml"
 
 #camera_info_url: ""
 
@@ -23,6 +23,7 @@ camera_info_url: "file:///app/config/orientation.yaml"
 #  'bayer_gbrg8' and 'bayer_rggb8'
 #  Default values are 'mono8' and 'rgb8', coord3d_c16
 image_encoding: "coord3d_c16"
+#image_encoding: "mono8"
 
 #  Binning factor to get downsampled images. It refers here to any camera
 #  setting which combines rectangular neighborhoods of pixels into larger
