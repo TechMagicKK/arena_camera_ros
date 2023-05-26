@@ -63,7 +63,6 @@ def main():
         save_png(img_ir, "ir.png")
 
         print("ok (enter) recapture (r)")
-        input()
         if input() == "r":
             retry = True
         else:
