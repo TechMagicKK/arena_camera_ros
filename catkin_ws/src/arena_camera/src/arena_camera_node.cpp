@@ -24,7 +24,7 @@
  * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
+ * POSSIBILITY OF SUCH DAMAGE. 
  *****************************************************************************/
 
 // STD
@@ -349,6 +349,7 @@ bool ArenaCameraNode::setImageEncoding(const std::string& ros_encoding)
 {
   std::string gen_api_encoding;
   bool conversion_found = encoding_conversions::ros2GenAPI(ros_encoding, gen_api_encoding);
+  ROS_INFO(gen_api_encoding.c_str());
   if (!conversion_found)
   {
     if (ros_encoding.empty())
@@ -371,6 +372,7 @@ bool ArenaCameraNode::setImageEncoding(const std::string& ros_encoding)
     GenApi::CEnumerationPtr pPixelFormat = pDevice_->GetNodeMap()->GetNode("PixelFormat");
     if (GenApi::IsWritable(pPixelFormat))
     {
+      ROS_INFO(gen_api_encoding.c_str());
       Arena::SetNodeValue<GenICam::gcstring>(pDevice_->GetNodeMap(), "PixelFormat", gen_api_encoding.c_str());
       if (currentROSEncoding() == "16UC3" || currentROSEncoding() == "16UC4")
         ROS_WARN_STREAM("ROS grabbing image data from 3D pixel format, unable to display in image viewer");
@@ -588,8 +590,16 @@ bool ArenaCameraNode::startGrabbing()
     // 	}
     // }
 
+    GenICam::gcstring operatingModeInitial = Arena::GetNodeValue<GenICam::gcstring>(pNodeMap, "Scan3dOperatingMode");
+
     Arena::SetNodeValue<GenICam::gcstring>(pDevice_->GetTLStreamNodeMap(), "StreamBufferHandlingMode", "NewestOnly");
 
+    ROS_INFO("Distance Mode: Distance1250SingleFreq");
+    //Set Working Distance Mode Distance3000mmSingleFreq
+    Arena::SetNodeValue<GenICam::gcstring>(pNodeMap, "Scan3dOperatingMode", "Distance1250mmSingleFreq");
+
+    Arena::SetNodeValue<GenICam::gcstring>(pNodeMap, "Scan3dHDRMode", "StandardHDR");
+    ROS_INFO("HDR Mode: on");
     //
     // Trigger Image
     //
@@ -1122,6 +1132,7 @@ void ArenaCameraNode::setupInitialCameraInfo(sensor_msgs::CameraInfo& cam_info_m
   // Projects 3D points in the camera coordinate frame to 2D pixel coordinates
   // using the focal lengths (fx, fy) and principal point (cx, cy).
   cam_info_msg.K.assign(0.0);
+  //cam_info_msg.K = std::vector<double>(9, 0.);
 
   // Rectification matrix (stereo cameras only)
   // A rotation matrix aligning the camera coordinate system to the ideal

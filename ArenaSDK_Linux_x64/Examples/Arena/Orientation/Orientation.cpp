@@ -54,20 +54,45 @@
 #define TIMEOUT 2000
 
 // calibration values file name
-#define FILE_NAME_IN "/temp/calibration_helios_triton/tritoncalibration.yml"
+#define FILE_NAME_IN "/app/calibration_helios_triton/tritoncalibration.yml"
 
 // orientation values file name
-#define FILE_NAME_OUT "/temp/calibration_helios_triton/orientation.yml"
+#define FILE_NAME_OUT "/app/calibration_helios_triton/orientation.yml"
 
 
 // =-=-=-=-=-=-=-=-=-
 // =-=- HELPERS -=-=-
 // =-=-=-=-=-=-=-=-=-
 
+void normalizeData(uint16_t* array, size_t size)
+{
+    // Find the minimum and maximum values in the array
+    uint16_t minValue = *std::min_element(array, array + size);
+    uint16_t maxValue = *std::max_element(array, array + size);
+
+    // Normalize the values in the array
+    for (size_t i = 0; i < size; i++)
+    {
+        float normalizedValue = static_cast<float>(array[i] - minValue) / static_cast<float>(maxValue - minValue);
+        array[i] = static_cast<uint16_t>(normalizedValue * std::numeric_limits<uint16_t>::max());
+    }
+}
+
 // helper function
 void getImageHLT(Arena::IDevice* pHeliosDevice, cv::Mat& intensity_image, cv::Mat& xyz_mm)
 {
+	GenICam::gcstring operatingModeInitial = Arena::GetNodeValue<GenICam::gcstring>(pHeliosDevice->GetNodeMap(), "Scan3dOperatingMode");
+
+    	//Arena::SetNodeValue<GenICam::gcstring>(pDevice_->GetTLStreamNodeMap(), "StreamBufferHandlingMode", "NewestOnly");
+
+    	//Set Working Distance Mode Distance3000mmSingleFreq
+    	Arena::SetNodeValue<GenICam::gcstring>(pHeliosDevice->GetNodeMap(), "Scan3dOperatingMode", "Distance1250mmSingleFreq");
+
+    	Arena::SetNodeValue<GenICam::gcstring>(pHeliosDevice->GetNodeMap(), "Scan3dHDRMode", "StandardHDR");
+
 	Arena::SetNodeValue<GenICam::gcstring>(pHeliosDevice->GetNodeMap(), "PixelFormat", "Coord3D_ABCY16");
+	
+        std::cout << "test1" << std::endl;
 
 	// enable stream auto negotiate packet size
 	Arena::SetNodeValue<bool>(
@@ -102,8 +127,19 @@ void getImageHLT(Arena::IDevice* pHeliosDevice, cv::Mat& intensity_image, cv::Ma
 	xyz_mm = cv::Mat((int)height, (int)width, CV_32FC3);
 	intensity_image = cv::Mat((int)height, (int)width, CV_16UC1);
 
-	const uint16_t* input_data;
+	uint16_t* input_data;
 	input_data = (uint16_t*)image->GetData();
+
+	size_t input_data_size = sizeof(input_data) / sizeof(input_data[0]);
+
+
+	normalizeData(input_data, input_data_size);
+	//uint16_t* normalizedImage;
+
+        //cv::normalize(input_data, normalizedImage, 0, 65535, cv::NORM_MINMAX, CV_16UC1);
+
+        //input_data = normalizedImage;
+
 
 	for (unsigned int ir = 0; ir < height; ++ir)
 	{
