@@ -18,3 +18,5 @@ CATKIN_IGNORE
 *.idea
 *.pyc
 *.save
+
+ArenaSDK_Linux_x64
