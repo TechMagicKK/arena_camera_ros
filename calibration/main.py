@@ -6,6 +6,7 @@
 import typer
 from helios_camera import HeliosCamera
 from leveling import Redrawer
+from calibrate import CameraBoard
 
 import matplotlib.pyplot as plt
 import cv2
@@ -38,6 +39,11 @@ def local():
     leveling = Redrawer(img_ir)
     leveling.adjust_ir()
     img_ir = leveling.get_adjusted_img()
+
+    # TODO: lin calibrate source code.
+    calib = CameraBoard(img_ir, img_depth)
+    calib.calibrate()
+
     plt.imshow(img_ir)
     plt.show()
 
