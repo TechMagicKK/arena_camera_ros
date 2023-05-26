@@ -108,12 +108,18 @@ protected:
   * @return false if an error occurred
   */
   bool initAndRegister();
+  
+  void calibrateRGBD();
 
   /**
   * Start the camera and initialize the messages
   * @return
   */
   bool startGrabbing();
+
+  cv::Mat* AcquireImageAndInterpretData(Arena::IDevice* pDevice);
+
+  cv::Mat* GetDepthMap(Arena::IDevice* pDevice);
 
   bool setImageEncoding(const std::string& ros_encoding);
 
@@ -133,6 +139,8 @@ protected:
   * Returns the number of subscribers for the raw image topic
   */
   uint32_t getNumSubscribersRaw() const;
+
+  uint32_t getNumSubscribersDepth() const;
 
   /**
   * Returns the number of subscribers for the rect image topic
@@ -369,6 +377,7 @@ protected:
 
   image_transport::ImageTransport* it_;
   image_transport::CameraPublisher img_raw_pub_;
+  image_transport::CameraPublisher img_depth_pub_;
 
   ros::Publisher* img_rect_pub_;
   image_geometry::PinholeCameraModel* pinhole_model_;
@@ -377,6 +386,8 @@ protected:
   GrabImagesAS* grab_imgs_rect_as_;
 
   sensor_msgs::Image img_raw_msg_;
+  sensor_msgs::ImagePtr img_depth_msg;
+  cv_bridge::CvImage cv_depth_img;
   cv_bridge::CvImage* cv_bridge_img_rect_;
 
   camera_info_manager::CameraInfoManager* camera_info_manager_;

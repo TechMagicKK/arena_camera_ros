@@ -30,7 +30,7 @@
  *  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
  *  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- *  POSSIBILITY OF SUCH DAMAGE.
+ *  POSSIBILITY OF SUCH DAMAGE. 
  *********************************************************************/
 
 #ifndef SENSOR_MSGS_IMAGE_ENCODINGS_H
@@ -55,6 +55,7 @@ const std::string MONO16 = "mono16";
 const std::string CONFIDENCE16 = "confidence16";
 const std::string COORD3D_ABC16 = "coord3d_abc16";
 const std::string COORD3D_ABCY16 = "coord3d_abcy16";
+const std::string COORD3D_C16 = "coord3d_c16";
 
 // OpenCV CvMat types
 const std::string TYPE_8UC1 = "8UC1";
@@ -169,10 +170,10 @@ static inline int numChannels(const std::string &encoding) {
   throw std::runtime_error("Unknown encoding " + encoding);
   return -1;
 }
-
+ 
 static inline int bitDepth(const std::string &encoding) {
   if (encoding == MONO16 || encoding == CONFIDENCE16 ||
-      encoding == COORD3D_ABC16 || encoding == COORD3D_ABCY16)
+      encoding == COORD3D_ABC16 || encoding == COORD3D_ABCY16 || encoding == COORD3D_C16)
     return 16;
   if (encoding == MONO8 || encoding == BGR8 || encoding == RGB8 ||
       encoding == BGRA8 || encoding == RGBA8 || encoding == BAYER_RGGB8 ||
