@@ -7,6 +7,7 @@ import typer
 from helios_camera import HeliosCamera
 from leveling import Redrawer
 from calibrate import CameraBoard
+import numpy as np
 
 import matplotlib.pyplot as plt
 import cv2
@@ -22,30 +23,37 @@ def get_images(camera):
     camera.setup("Mono16")
     with camera.device.start_stream(1):
         img_ir = camera.get_image()
-    return img_depth, img_ir
+    print(f"scale {camera.scale_z}")
+    
+    img_depth = np.array(img_depth, dtype=np.float32) * camera.scale_z
+    return np.uint16(img_depth), img_ir
 
 def save_png(img, png_name):
     cv2.imwrite(png_name, img)
 
 def load_images():
-    img_depth = cv2.imread("depth.png")
+    img_depth = cv2.imread("depth.png", cv2.IMREAD_ANYDEPTH)
     img_ir = cv2.imread("ir.png")
     return img_depth, img_ir
 
 @app.command()
 def local():
     img_depth, img_ir = load_images()
+    img_depth = np.array(img_depth, dtype=np.float32)
+    # img_depth *= 0.25
+
     img_ir = cv2.cvtColor(img_ir, cv2.COLOR_BGR2GRAY)
     leveling = Redrawer(img_ir)
     leveling.adjust_ir()
     img_ir = leveling.get_adjusted_img()
 
+    plt.imshow(img_ir)
+    plt.show()
+
     # TODO: lin calibrate source code.
     calib = CameraBoard(img_ir, img_depth)
     calib.calibrate()
 
-    plt.imshow(img_ir)
-    plt.show()
 
 
 @app.command()

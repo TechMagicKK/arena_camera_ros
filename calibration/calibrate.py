@@ -13,50 +13,47 @@ class CameraBoard():
         [0.0, 0.0, 1.0]])
 
     def __init__(self, mono: np.array, depth: np.array) -> None:
-        self._mono_data, self._depth_data = get_data(mono, depth)
+        self._mono_data = np.uint8(mono)
+        self._depth_data = depth
 
-    def get_data(self, mono: np.array, depth: np.array) -> list:
-        img_gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-        # img_gray = cv.bitwise_not(img_gray)
-        depth_data = depth
-        return img_gray, depth_data
-
-    def calibrate() -> None:
-        """ 
+    def calibrate(self) -> None:
+        """
         Find the chess board corners
         If desired number of corners are found in the image then ret = true
         """
         ret, corners = cv.findChessboardCorners(
-            img_gray, CHECKERBOARD, cv.CALIB_CB_ADAPTIVE_THRESH +
+            self._mono_data, CameraBoard.CHECKERBOARD, cv.CALIB_CB_ADAPTIVE_THRESH +
             cv.CALIB_CB_FAST_CHECK + cv.CALIB_CB_NORMALIZE_IMAGE)
 
         """
         If desired number of corner are detected,
-        we refine the pixel coordinates and display 
+        we refine the pixel coordinates and display
         them on the images of checker board
         """
-        if ret == True:
+        if ret:
             # refining pixel coordinates for given 2d points.
-            corners2 = cv.cornerSubPix(img_gray, corners, (5, 5), (-1, -1), (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001))
+            corners2 = cv.cornerSubPix(self._mono_data, corners, (5, 5), (-1, -1), (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001))
 
             uv_point1 = corners2[41][0]
             uv_point2 = corners2[36][0]
             print(f"point 1: {uv_point1}")
             print(f"point 2: {uv_point2}")
 
-            fx = CAM_INTRINSIC[0][0]
-            fy = CAM_INTRINSIC[1][1]
-            cx = CAM_INTRINSIC[0][2]
-            cy = CAM_INTRINSIC[1][2]
+            fx = CameraBoard.CAM_INTRINSIC[0][0]
+            fy = CameraBoard.CAM_INTRINSIC[1][1]
+            cx = CameraBoard.CAM_INTRINSIC[0][2]
+            cy = CameraBoard.CAM_INTRINSIC[1][2]
 
             # calculate x, y of translation matrix.
-            tz = depth[int(uv_point1[1]), int(uv_point1[0])] * 0.001
+            tz = self._depth_data[int(uv_point1[1]), int(uv_point1[0])] * 0.001
             tx = (uv_point1[0] - cx) / fx * tz
             ty = (uv_point1[1] - cy) / fy * tz
 
             # calculate rotation matrix by using two points in UV space.
             theta = math.atan2((uv_point2[1] - uv_point1[1]), (uv_point2[0] - uv_point1[0]))
             print(f"theta angle: {theta}")
+            print(f"tx: {tx}")
+            print(f"tz: {tz}")
             cam2board_mat = np.zeros((4, 4))
             cam2board_mat[0][0] = math.cos(theta)
             cam2board_mat[0][1] = -math.sin(theta)

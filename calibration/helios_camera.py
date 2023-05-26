@@ -30,9 +30,10 @@ class HeliosCamera:
 
     def setup(self, pixelformat="Coord3D_C16"):
 
-        nodes = self.device.nodemap.get_node(["Width", "Height", "PixelFormat", "Scan3dHDRMode"])
+        nodes = self.device.nodemap.get_node(["Width", "Height", "PixelFormat", "Scan3dHDRMode", "Scan3dCoordinateScale"])
         nodes["Scan3dHDRMode"].value = "StandardHDR"
         nodes["PixelFormat"].value = pixelformat
+        self.scale_z = nodes["Scan3dCoordinateScale"].value
 
     def get_image(self):
         image_buffer = self.device.get_buffer()
