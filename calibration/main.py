@@ -34,9 +34,10 @@ def load_images():
 @app.command()
 def local():
     img_depth, img_ir = load_images()
+    img_ir = cv2.cvtColor(img_ir, cv2.COLOR_BGR2GRAY)
     leveling = Redrawer(img_ir)
     leveling.adjust_ir()
-    img_ir = leveling.level(img_ir, leveling.vmin, leveling.vmax)
+    img_ir = leveling.get_adjusted_img()
     plt.imshow(img_ir)
     plt.show()
 
