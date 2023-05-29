@@ -1,0 +1,7 @@
+numpy
+tenacity
+matplotlib
+typer
+ipympl
+paramiko==3.0.0
+scp==0.14.5

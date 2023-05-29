@@ -21,7 +21,7 @@ RUN apt-get update && apt-get install -y build-essential curl git \
     libjpeg-dev zlib1g-dev libpython-dev libavcodec-dev libavformat-dev \
     libswscale-dev libtbb2 libtbb-dev libpostproc-dev libeigen3-dev libglew-dev \
     libgtk2.0-dev libhdf5-dev libprotobuf-dev protobuf-compiler libboost-all-dev \
-    libx264-dev libx265-dev
+    libx264-dev libx265-dev python3-pip python3-dev python3-numpy python3-tk
 
 
 ###################################################################
@@ -46,7 +46,7 @@ RUN cmake -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib-$OPENCV_VERSION/modu
     -D WITH_CUDA=OFF \
     -D INSTALL_PYTHON_EXAMPLES=OFF \
     -D BUILD_opencv_python2=ON \
-    -D BUILD_opencv_python3=OFF \
+    -D BUILD_opencv_python3=ON \
     -D PYTHON_DEFAULT_EXECUTABLE=python \
     -D BUILD_opencv_highgui=ON \
     -D WITH_EIGEN=ON \
@@ -87,6 +87,10 @@ WORKDIR /app
 COPY . /app
 
 RUN /app/docker/catkin_build.sh $ROS_VERSION
+RUN python3 -m pip install --upgrade pip && \
+    python3 -m pip install --no-cache-dir arena_api-2.3.3-py3-none-any.whl
+RUN pip3 install -r /app/docker/requirements.txt
+
 
 WORKDIR /root/catkin_ws
 RUN echo "source /opt/ros/${ROS_VERSION}/setup.bash" >> /root/.bashrc
