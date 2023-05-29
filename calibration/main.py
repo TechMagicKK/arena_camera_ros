@@ -15,6 +15,18 @@ import cv2
 app = typer.Typer()
 
 
+class ClickImage:
+    def __init__(self, img):
+        self.img = img
+        self.fig, self.ax = plt.subplots()
+        self.im = self.ax.imshow(self.img)
+        self.fig.canvas.mpl_connect("button_press_event", self.onclick)
+
+    def onclick(self, event):
+        print(f"x: {event.xdata}, y: {event.ydata})")
+        # print(self.img[int(event.ydata), int(event.xdata)])
+
+
 def get_images(camera):
     camera.setup()
     print("start fetching image")
@@ -24,40 +36,39 @@ def get_images(camera):
     with camera.device.start_stream(1):
         img_ir = camera.get_image()
     print(f"scale {camera.scale_z}")
-    
     img_depth = np.array(img_depth, dtype=np.float32) * camera.scale_z
     return np.uint16(img_depth), img_ir
 
+
 def save_png(img, png_name):
     cv2.imwrite(png_name, img)
+
 
 def load_images():
     img_depth = cv2.imread("depth.png", cv2.IMREAD_ANYDEPTH)
     img_ir = cv2.imread("ir.png")
     return img_depth, img_ir
 
+
 @app.command()
-def local():
+def load():
     img_depth, img_ir = load_images()
     img_depth = np.array(img_depth, dtype=np.float32)
-    # img_depth *= 0.25
 
     img_ir = cv2.cvtColor(img_ir, cv2.COLOR_BGR2GRAY)
     leveling = Redrawer(img_ir)
     leveling.adjust_ir()
     img_ir = leveling.get_adjusted_img()
 
-    plt.imshow(img_ir)
-    plt.show()
-
-    # TODO: lin calibrate source code.
     calib = CameraBoard(img_ir, img_depth)
     calib.calibrate()
 
+    cl = ClickImage(img_ir)
+    plt.show()
 
 
 @app.command()
-def main():
+def capture():
     camera = HeliosCamera()
     print("connecting to device")
     camera.connect_device()
@@ -74,14 +85,28 @@ def main():
         plt.imshow(img_ir)
         plt.show()
 
-        save_png(img_depth, "depth.png")
-        save_png(img_ir, "ir.png")
-
         print("ok (enter) recapture (r)")
         if input() == "r":
             retry = True
         else:
             retry = False
+
+    print("saving images")
+    save_png(img_depth, "depth.png")
+    save_png(img_ir, "ir.png")
+
+    img_depth = np.array(img_depth, dtype=np.float32)
+    img_ir = cv2.cvtColor(img_ir, cv2.COLOR_BGR2GRAY)
+    leveling = Redrawer(img_ir)
+    leveling.adjust_ir()
+    img_ir = leveling.get_adjusted_img()
+
+    print("calibrating camera")
+    calib = CameraBoard(img_ir, img_depth)
+    calib.calibrate()
+
+    cl = ClickImage(img_ir)
+    plt.show()
 
 
 if __name__ == "__main__":
