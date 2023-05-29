@@ -21,10 +21,26 @@ class ClickImage:
         self.fig, self.ax = plt.subplots()
         self.im = self.ax.imshow(self.img)
         self.fig.canvas.mpl_connect("button_press_event", self.onclick)
+        self.fig.canvas.mpl_connect("key_press_event", self.onkey)
+        self.click_ok = False
+        self.points = []
+
+    def onkey(self, event):
+        if event.key == "q":
+            plt.close()
+        elif event.key == "a":
+            self.click_ok = True
 
     def onclick(self, event):
-        print(f"x: {event.xdata}, y: {event.ydata})")
-        # print(self.img[int(event.ydata), int(event.xdata)])
+        if self.click_ok:
+            print(f"{len(self.points)} x: {event.xdata}, y: {event.ydata})")
+            self.points.append((event.xdata, event.ydata))
+            self.click_ok = False
+
+    def save(self):
+        with open("/app/user_points.csv", "w") as f:
+            for point in self.points:
+                f.write(f"{point[0]},{point[1]}\n")
 
 
 def get_images(camera):
@@ -50,12 +66,11 @@ def load_images():
     return img_depth, img_ir
 
 
-@app.command()
-def load():
-    img_depth, img_ir = load_images()
-    img_depth = np.array(img_depth, dtype=np.float32)
+def send_data():
+    pass
 
-    img_ir = cv2.cvtColor(img_ir, cv2.COLOR_BGR2GRAY)
+
+def calibrate(img_ir, img_depth):
     leveling = Redrawer(img_ir)
     leveling.adjust_ir()
     img_ir = leveling.get_adjusted_img()
@@ -65,6 +80,16 @@ def load():
 
     cl = ClickImage(img_ir)
     plt.show()
+    cl.save()
+    send_data()
+
+@app.command()
+def load():
+    img_depth, img_ir = load_images()
+    img_depth = np.array(img_depth, dtype=np.float32)
+
+    img_ir = cv2.cvtColor(img_ir, cv2.COLOR_BGR2GRAY)
+    calibrate(img_ir, img_depth)
 
 
 @app.command()
@@ -97,16 +122,7 @@ def capture():
 
     img_depth = np.array(img_depth, dtype=np.float32)
     img_ir = cv2.cvtColor(img_ir, cv2.COLOR_BGR2GRAY)
-    leveling = Redrawer(img_ir)
-    leveling.adjust_ir()
-    img_ir = leveling.get_adjusted_img()
-
-    print("calibrating camera")
-    calib = CameraBoard(img_ir, img_depth)
-    calib.calibrate()
-
-    cl = ClickImage(img_ir)
-    plt.show()
+    calibrate(img_ir, img_depth)
 
 
 if __name__ == "__main__":
