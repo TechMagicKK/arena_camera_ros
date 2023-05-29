@@ -32,10 +32,8 @@ x-container: &base-config
     - "/tmp/.X11-unix:/tmp/.X11-unix"
     - "./:/app/"
 
-
 services:
-
   dev:
     <<: *base-config
     # restart: always
-    command: sleep infinity
+    command: "/app/docker/docker_entrypoint.sh"
