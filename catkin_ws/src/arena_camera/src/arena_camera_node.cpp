@@ -530,6 +530,19 @@ bool ArenaCameraNode::startGrabbing()
     setupInitialCameraInfo(initial_cam_info);
     camera_info_manager_->setCameraInfo(initial_cam_info);
 
+    auto focal_X = Arena::GetNodeValue<double>(pDevice_->GetNodeMap(), "CalibFocalLengthX");
+    auto focal_Y = Arena::GetNodeValue<double>(pDevice_->GetNodeMap(), "CalibFocalLengthY");
+    auto center_X = Arena::GetNodeValue<double>(pDevice_->GetNodeMap(), "CalibOpticalCenterX");
+    auto center_Y = Arena::GetNodeValue<double>(pDevice_->GetNodeMap(), "CalibOpticalCenterY");
+    auto distort_val = Arena::GetNodeValue<double>(pDevice_->GetNodeMap(), "CalibLensDistortionValue");
+
+    // Set the K matrix
+    initial_cam_info.K[0] = focal_X;  // Focal length along x-axis
+    initial_cam_info.K[2] = center_X;  // Principal point x-coordinate
+    initial_cam_info.K[4] = focal_Y;  // Focal length along y-axis
+    initial_cam_info.K[5] = center_Y;  // Principal point y-coordinate
+    initial_cam_info.K[8] = 1.0; // Fixed value for a pinhole camera model
+
     if (arena_camera_parameter_set_.cameraInfoURL().empty() ||
         !camera_info_manager_->validateURL(arena_camera_parameter_set_.cameraInfoURL()))
     {
@@ -543,6 +556,7 @@ bool ArenaCameraNode::startGrabbing()
     }
     else
     {
+      //camera name is assigned in this block
       // override initial camera info if the url is valid
       if (camera_info_manager_->loadCameraInfo(arena_camera_parameter_set_.cameraInfoURL()))
       {
@@ -598,8 +612,17 @@ bool ArenaCameraNode::startGrabbing()
     //Set Working Distance Mode Distance3000mmSingleFreq
     Arena::SetNodeValue<GenICam::gcstring>(pNodeMap, "Scan3dOperatingMode", "Distance1250mmSingleFreq");
 
-    Arena::SetNodeValue<GenICam::gcstring>(pNodeMap, "Scan3dHDRMode", "StandardHDR");
-    ROS_INFO("HDR Mode: on");
+    std::cout << "HDR switch: " << arena_camera_parameter_set_.hdrMode() <<std::endl;
+
+    if (arena_camera_parameter_set_.hdrMode())
+    {
+      Arena::SetNodeValue<GenICam::gcstring>(pNodeMap, "Scan3dHDRMode", "StandardHDR");
+      ROS_INFO("HDR Mode: on");
+    }
+    else
+    {
+      ROS_INFO("HDR Mode: off");
+    }
     //
     // Trigger Image
     //
@@ -1132,7 +1155,19 @@ void ArenaCameraNode::setupInitialCameraInfo(sensor_msgs::CameraInfo& cam_info_m
   // Projects 3D points in the camera coordinate frame to 2D pixel coordinates
   // using the focal lengths (fx, fy) and principal point (cx, cy).
   cam_info_msg.K.assign(0.0);
-  //cam_info_msg.K = std::vector<double>(9, 0.);
+
+  // auto focal_X = Arena::GetNodeValue<double>(pDevice_->GetNodeMap(), "CalibFocalLengthX");
+  // auto focal_Y = Arena::GetNodeValue<double>(pDevice_->GetNodeMap(), "CalibFocalLengthY");
+  // auto center_X = Arena::GetNodeValue<double>(pDevice_->GetNodeMap(), "CalibOpticalCenterX");
+  // auto center_Y = Arena::GetNodeValue<double>(pDevice_->GetNodeMap(), "CalibOpticalCenterY");
+  // auto distort_val = Arena::GetNodeValue<double>(pDevice_->GetNodeMap(), "CalibLensDistortionValue");
+
+  // // Set the K matrix
+  // cam_info_msg.K[0] = focal_X;  // Focal length along x-axis
+  // cam_info_msg.K[2] = center_X;  // Principal point x-coordinate
+  // cam_info_msg.K[4] = focal_Y;  // Focal length along y-axis
+  // cam_info_msg.K[5] = center_Y;  // Principal point y-coordinate
+  // cam_info_msg.K[8] = 1.0; // Fixed value for a pinhole camera model
 
   // Rectification matrix (stereo cameras only)
   // A rotation matrix aligning the camera coordinate system to the ideal

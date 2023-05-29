@@ -110,6 +110,8 @@ public:
    */
   void setCameraInfoURL(const ros::NodeHandle& nh, const std::string& camera_info_url);
 
+  bool hdrMode();
+
 public:
   /** Binning factor to get downsampled images. It refers here to any camera
    * setting which combines rectangular neighborhoods of pixels into larger
@@ -305,6 +307,8 @@ protected:
    * device list will be used
    */
   std::string device_user_id_;
+
+  bool hdr_mode_;
 
   /**
    * The desired publisher frame rate if listening to the topics.
