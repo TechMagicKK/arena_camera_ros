@@ -12,6 +12,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cv2
 
+import paramiko
+from scp import SCPClient
+
+
 app = typer.Typer()
 
 
@@ -67,7 +71,18 @@ def load_images():
 
 
 def send_data():
-    pass
+    try:
+        client = paramiko.SSHClient()
+        client.load_system_host_keys()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        client.connect("172.16.0.2", 22, "mnrobot2", "tm0201")
+        scp = SCPClient(client.get_transport())
+        scp.put("/app/user_points.csv", remote_path="/home/mnrobot2/Work/mnrobot_core/mnrobot_arm/mnrobot_calibration/config")
+        scp.put("/app/cam2board_mat.npy", remote_path="/home/mnrobot2/Work/mnrobot_core/mnrobot_arm/mnrobot_calibration/config")
+        scp.close()
+        print("Sent data success.")
+    except:
+        print("Can not sent data calibrated result to MiniPC.")
 
 
 def calibrate(img_ir, img_depth):
