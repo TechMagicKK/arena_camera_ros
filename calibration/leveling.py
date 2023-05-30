@@ -17,7 +17,7 @@ class Redrawer:
                 label="min",
                 valmin=img.min(),
                 valmax=img.max(),
-                valinit=img.min(),
+                valinit=img.max(),
                 orientation="horizontal",
             )
         self.slider_max = Slider(
@@ -25,7 +25,7 @@ class Redrawer:
                 label="max",
                 valmin=img.min(),
                 valmax=img.max(),
-                valinit=img.max(),
+                valinit=img.min(),
                 orientation="horizontal",
             )
 
