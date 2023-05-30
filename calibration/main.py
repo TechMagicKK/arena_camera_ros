@@ -76,7 +76,7 @@ def send_data():
         client = paramiko.SSHClient()
         client.load_system_host_keys()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        client.connect("172.16.0.2", username="mnrobot2", key_filename="/app/tm_key")
+        client.connect("172.16.0.2", username="mnrobot2", key_filename="/root/tm_key")
         scp = SCPClient(client.get_transport())
         scp.put("/app/user_points.csv", remote_path="/home/mnrobot2/Work/mnrobot_core/mnrobot_arm/mnrobot_calibration/config")
         scp.put("/app/cam2board_mat.npy", remote_path="/home/mnrobot2/Work/mnrobot_core/mnrobot_arm/mnrobot_calibration/config")
