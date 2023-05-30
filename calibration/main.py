@@ -121,6 +121,8 @@ def capture():
     fig, axs = plt.subplots(1, 2)
     im0 = axs[0].imshow(img_depth)
     im1 = axs[1].imshow(img_ir)
+    axs[0].set_title("depth")
+    axs[1].set_title("ir")
 
     def recapture(event):
         img_depth, img_ir = get_images(camera)
