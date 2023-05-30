@@ -6,14 +6,14 @@ camera_frame: arena_camera
 
 #  The DeviceUserID of the camera. If empty, the first camera found in the
 #  device list will be used
-device_user_id: ""
+device_user_id: "depth"
 
 # The CameraInfo URL (Uniform Resource Locator) where the optional intrinsic
 #  camera calibration parameters are stored. This URL string will be parsed
 #  from the ROS-CameraInfoManager:
 #  http://docs.ros.org/api/camera_info_manager/html/classcamera__info__manager_
 #  1_1CameraInfoManager.html#details
-camera_info_url: "file:///app/config/cam_info.yaml"
+camera_info_url: "file:///root/catkin_ws/src/arena_camera/config/cam_info.yaml"
 
 #camera_info_url: ""
 
