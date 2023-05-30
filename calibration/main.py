@@ -10,6 +10,7 @@ from calibrate import CameraBoard
 import numpy as np
 
 import matplotlib.pyplot as plt
+from matplotlib.widgets import Button
 import cv2
 
 import paramiko
@@ -116,27 +117,31 @@ def capture():
     camera.make_stream()
     print("make parameters")
 
-    retry = True
-    while retry:
+    img_depth, img_ir = get_images(camera)
+    fig, axs = plt.subplots(1, 2)
+    im0 = axs[0].imshow(img_depth)
+    im1 = axs[1].imshow(img_ir)
+
+    def recapture(event):
         img_depth, img_ir = get_images(camera)
-        plt.subplot(1, 2, 1)
-        plt.imshow(img_depth)
-        plt.subplot(1, 2, 2)
-        plt.imshow(img_ir)
-        plt.show()
+        im0.set_data(img_depth)
+        im1.set_data(img_ir)
+    def save_images(event):
+        print("saving images")
+        save_png(img_depth, "depth.png")
+        save_png(img_ir, "ir.png")
 
-        print("ok (enter) recapture (r)")
-        if input() == "r":
-            retry = True
-        else:
-            retry = False
+    axrecapture = plt.axes([0.81, 0.05, 0.1, 0.075])
+    axsave = plt.axes([0.7, 0.05, 0.1, 0.075])
+    brecapture = Button(axrecapture, "Recapture")
+    brecapture.on_clicked(recapture)
 
-    print("saving images")
-    save_png(img_depth, "depth.png")
-    save_png(img_ir, "ir.png")
+    bsave = Button(axsave, "Save images")
+    bsave.on_clicked(save_images)
+    plt.show()
 
     img_depth = np.array(img_depth, dtype=np.float32)
-    img_ir = cv2.cvtColor(img_ir, cv2.COLOR_BGR2GRAY)
+    #img_ir = cv2.cvtColor(img_ir, cv2.COLOR_BGR2GRAY)
     calibrate(img_ir, img_depth)
 
 
