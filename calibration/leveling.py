@@ -14,18 +14,18 @@ class Redrawer:
         slider_max = self.fig.add_axes([0.20, 0.15, 0.60, 0.03])
         self.slider_min = Slider(
                 ax=slider_min,
-                label="min",
+                label="threshold min",
                 valmin=img.min(),
                 valmax=img.max(),
-                valinit=img.min(),
+                valinit=img.max(),
                 orientation="horizontal",
             )
         self.slider_max = Slider(
                 ax=slider_max,
-                label="max",
+                label="threshold max",
                 valmin=img.min(),
                 valmax=img.max(),
-                valinit=img.max(),
+                valinit=img.min(),
                 orientation="horizontal",
             )
 
