@@ -350,7 +350,6 @@ bool ArenaCameraNode::setImageEncoding(const std::string& ros_encoding)
 {
   std::string gen_api_encoding;
   bool conversion_found = encoding_conversions::ros2GenAPI(ros_encoding, gen_api_encoding);
-  ROS_INFO(gen_api_encoding.c_str());
   if (!conversion_found)
   {
     if (ros_encoding.empty())
@@ -373,7 +372,7 @@ bool ArenaCameraNode::setImageEncoding(const std::string& ros_encoding)
     GenApi::CEnumerationPtr pPixelFormat = pDevice_->GetNodeMap()->GetNode("PixelFormat");
     if (GenApi::IsWritable(pPixelFormat))
     {
-      ROS_INFO(gen_api_encoding.c_str());
+      ROS_INFO("Pixel Format: %s", gen_api_encoding.c_str());
       Arena::SetNodeValue<GenICam::gcstring>(pDevice_->GetNodeMap(), "PixelFormat", gen_api_encoding.c_str());
       if (currentROSEncoding() == "16UC3" || currentROSEncoding() == "16UC4")
         ROS_WARN_STREAM("ROS grabbing image data from 3D pixel format, unable to display in image viewer");
