@@ -143,6 +143,7 @@ def capture():
     plt.show()
 
     img_depth = np.array(img_depth, dtype=np.float32)
+    img_ir = (img_ir - img_ir.min())/(img_ir.max()-img_ir.min()) * 255.0
     #img_ir = cv2.cvtColor(img_ir, cv2.COLOR_BGR2GRAY)
     calibrate(img_ir, img_depth)
 
