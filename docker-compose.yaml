@@ -38,7 +38,8 @@ services:
     <<: *base-config
     # command: sleep infinity
     command: python3 /app/calibration/main.py capture
-  dev:
+
+  driver:
     <<: *base-config
     # restart: always
     command: "/app/docker/docker_entrypoint.sh"
