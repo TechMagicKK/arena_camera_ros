@@ -110,7 +110,9 @@ public:
    */
   void setCameraInfoURL(const ros::NodeHandle& nh, const std::string& camera_info_url);
 
-  bool hdrMode();
+  const std::string hdrMode() const;
+
+  const std::string distanceMode() const; 
 
 public:
   /** Binning factor to get downsampled images. It refers here to any camera
@@ -308,7 +310,11 @@ protected:
    */
   std::string device_user_id_;
 
-  bool hdr_mode_;
+  // a switch to turn HDR mode on or off
+  std::string hdr_mode_;
+
+  // to set the distance mode
+  std::string distance_mode_;
 
   /**
    * The desired publisher frame rate if listening to the topics.

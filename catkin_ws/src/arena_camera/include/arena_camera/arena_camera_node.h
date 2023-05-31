@@ -362,6 +362,8 @@ protected:
   bool setAutoflash(const int output_id, camera_control_msgs::SetBool::Request& req,
                     camera_control_msgs::SetBool::Response& res);
 
+  void assignCameraIntrinsicParameters(sensor_msgs::CameraInfo& cam_info_K);
+
   ros::NodeHandle nh_;
   ArenaCameraParameter arena_camera_parameter_set_;
   ros::ServiceServer set_binning_srv_;
@@ -396,6 +398,7 @@ protected:
   std::array<float, 256> brightness_exp_lut_;
 
   bool is_sleeping_;
+  bool config_file_available_;
   boost::recursive_mutex grab_mutex_;
 
   /// diagnostics:

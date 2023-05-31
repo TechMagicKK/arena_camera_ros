@@ -87,6 +87,7 @@ ArenaCameraNode::ArenaCameraNode()
   , sampling_indices_()
   , brightness_exp_lut_()
   , is_sleeping_(false)
+  , config_file_available_(false)
 {
   diagnostics_updater_.setHardwareID("none");
   diagnostics_updater_.add("camera_availability", this, &ArenaCameraNode::create_diagnostics);
@@ -530,22 +531,12 @@ bool ArenaCameraNode::startGrabbing()
     setupInitialCameraInfo(initial_cam_info);
     camera_info_manager_->setCameraInfo(initial_cam_info);
 
-    auto focal_X = Arena::GetNodeValue<double>(pDevice_->GetNodeMap(), "CalibFocalLengthX");
-    auto focal_Y = Arena::GetNodeValue<double>(pDevice_->GetNodeMap(), "CalibFocalLengthY");
-    auto center_X = Arena::GetNodeValue<double>(pDevice_->GetNodeMap(), "CalibOpticalCenterX");
-    auto center_Y = Arena::GetNodeValue<double>(pDevice_->GetNodeMap(), "CalibOpticalCenterY");
-    auto distort_val = Arena::GetNodeValue<double>(pDevice_->GetNodeMap(), "CalibLensDistortionValue");
-
-    // Set the K matrix
-    initial_cam_info.K[0] = focal_X;  // Focal length along x-axis
-    initial_cam_info.K[2] = center_X;  // Principal point x-coordinate
-    initial_cam_info.K[4] = focal_Y;  // Focal length along y-axis
-    initial_cam_info.K[5] = center_Y;  // Principal point y-coordinate
-    initial_cam_info.K[8] = 1.0; // Fixed value for a pinhole camera model
-
+    
     if (arena_camera_parameter_set_.cameraInfoURL().empty() ||
         !camera_info_manager_->validateURL(arena_camera_parameter_set_.cameraInfoURL()))
     {
+      config_file_available_ = false;
+
       ROS_INFO_STREAM("CameraInfoURL needed for rectification! ROS-Param: "
                       << "'" << nh_.getNamespace() << "/camera_info_url' = '"
                       << arena_camera_parameter_set_.cameraInfoURL() << "' is invalid!");
@@ -564,7 +555,10 @@ bool ArenaCameraNode::startGrabbing()
         // set the correct tf frame_id
         CameraInfoPtr cam_info(new CameraInfo(camera_info_manager_->getCameraInfo()));
         cam_info->header.frame_id = img_raw_msg_.header.frame_id;
+
         camera_info_manager_->setCameraInfo(*cam_info);
+
+        config_file_available_ = true;
       }
       else
       {
@@ -604,25 +598,34 @@ bool ArenaCameraNode::startGrabbing()
     // 	}
     // }
 
-    GenICam::gcstring operatingModeInitial = Arena::GetNodeValue<GenICam::gcstring>(pNodeMap, "Scan3dOperatingMode");
-
+  
     Arena::SetNodeValue<GenICam::gcstring>(pDevice_->GetTLStreamNodeMap(), "StreamBufferHandlingMode", "NewestOnly");
+    
+    //Set Working Distance Mode
+    GenICam::gcstring operatingModeInitial = Arena::GetNodeValue<GenICam::gcstring>(pNodeMap, "Scan3dOperatingMode");
+    std::string distMode_ = arena_camera_parameter_set_.distanceMode();
+    Arena::SetNodeValue<GenICam::gcstring>(pNodeMap, "Scan3dOperatingMode", distMode_.c_str());
+    GenICam::gcstring distanceModeCurrent = Arena::GetNodeValue<GenICam::gcstring>(pNodeMap, "Scan3dOperatingMode");
+    ROS_INFO("Distance Mode: %s", distanceModeCurrent.c_str());
 
-    ROS_INFO("Distance Mode: Distance1250SingleFreq");
-    //Set Working Distance Mode Distance3000mmSingleFreq
-    Arena::SetNodeValue<GenICam::gcstring>(pNodeMap, "Scan3dOperatingMode", "Distance1250mmSingleFreq");
+    //Set HDR Mode
+    GenICam::gcstring hdrModeInitial = Arena::GetNodeValue<GenICam::gcstring>(pNodeMap, "Scan3dHDRMode");
+    std::string hdrMode_ = arena_camera_parameter_set_.hdrMode();
+    Arena::SetNodeValue<GenICam::gcstring>(pNodeMap, "Scan3dHDRMode", hdrMode_.c_str());
+    GenICam::gcstring hdrModeCurrent = Arena::GetNodeValue<GenICam::gcstring>(pNodeMap, "Scan3dHDRMode");
+    ROS_INFO("HDR Mode: %s", hdrModeCurrent.c_str());
 
-    std::cout << "HDR switch: " << arena_camera_parameter_set_.hdrMode() <<std::endl;
 
-    if (arena_camera_parameter_set_.hdrMode())
-    {
-      Arena::SetNodeValue<GenICam::gcstring>(pNodeMap, "Scan3dHDRMode", "StandardHDR");
-      ROS_INFO("HDR Mode: on");
-    }
-    else
-    {
-      ROS_INFO("HDR Mode: off");
-    }
+    // if (arena_camera_parameter_set_.hdrMode())
+    // {
+    //   Arena::SetNodeValue<GenICam::gcstring>(pNodeMap, "Scan3dHDRMode", "StandardHD");
+    //   ROS_INFO("HDR Mode: on");
+    // }
+    // else
+    // {
+    //   Arena::SetNodeValue<GenICam::gcstring>(pNodeMap, "Scan3dHDRMode", "Off");
+    //   ROS_INFO("HDR Mode: off");
+    // }
     //
     // Trigger Image
     //
@@ -740,7 +743,7 @@ uint32_t ArenaCameraNode::getNumSubscribersRaw() const
 
 void ArenaCameraNode::spin()
 {
-  if (camera_info_manager_->isCalibrated())
+  if (config_file_available_)
   {
     ROS_INFO_ONCE("Camera is calibrated");
   }
@@ -788,7 +791,7 @@ void ArenaCameraNode::spin()
       ROS_INFO_ONCE("Number subscribers received");
     }
 
-    if (getNumSubscribersRect() > 0 && camera_info_manager_->isCalibrated())
+    if (getNumSubscribersRect() > 0 && config_file_available_)
     {
       cv_bridge_img_rect_->header.stamp = img_raw_msg_.header.stamp;
       assert(pinhole_model_->initialized());
@@ -844,7 +847,7 @@ void ArenaCameraNode::grabImagesRawActionExecuteCB(const camera_control_msgs::Gr
 void ArenaCameraNode::grabImagesRectActionExecuteCB(const camera_control_msgs::GrabImagesGoal::ConstPtr& goal)
 {
   camera_control_msgs::GrabImagesResult result;
-  if (!camera_info_manager_->isCalibrated())
+  if (!config_file_available_)
   {
     result.success = false;
     grab_imgs_rect_as_->setSucceeded(result);
@@ -1107,7 +1110,7 @@ const std::string& ArenaCameraNode::cameraFrame() const
 
 uint32_t ArenaCameraNode::getNumSubscribersRect() const
 {
-  return camera_info_manager_->isCalibrated() ? img_rect_pub_->getNumSubscribers() : 0;
+  return config_file_available_ ? img_rect_pub_->getNumSubscribers() : 0;
 }
 
 uint32_t ArenaCameraNode::getNumSubscribers() const
@@ -1156,18 +1159,7 @@ void ArenaCameraNode::setupInitialCameraInfo(sensor_msgs::CameraInfo& cam_info_m
   // using the focal lengths (fx, fy) and principal point (cx, cy).
   cam_info_msg.K.assign(0.0);
 
-  // auto focal_X = Arena::GetNodeValue<double>(pDevice_->GetNodeMap(), "CalibFocalLengthX");
-  // auto focal_Y = Arena::GetNodeValue<double>(pDevice_->GetNodeMap(), "CalibFocalLengthY");
-  // auto center_X = Arena::GetNodeValue<double>(pDevice_->GetNodeMap(), "CalibOpticalCenterX");
-  // auto center_Y = Arena::GetNodeValue<double>(pDevice_->GetNodeMap(), "CalibOpticalCenterY");
-  // auto distort_val = Arena::GetNodeValue<double>(pDevice_->GetNodeMap(), "CalibLensDistortionValue");
-
-  // // Set the K matrix
-  // cam_info_msg.K[0] = focal_X;  // Focal length along x-axis
-  // cam_info_msg.K[2] = center_X;  // Principal point x-coordinate
-  // cam_info_msg.K[4] = focal_Y;  // Focal length along y-axis
-  // cam_info_msg.K[5] = center_Y;  // Principal point y-coordinate
-  // cam_info_msg.K[8] = 1.0; // Fixed value for a pinhole camera model
+  assignCameraIntrinsicParameters(cam_info_msg);
 
   // Rectification matrix (stereo cameras only)
   // A rotation matrix aligning the camera coordinate system to the ideal
@@ -1218,6 +1210,24 @@ void ArenaCameraNode::setupInitialCameraInfo(sensor_msgs::CameraInfo& cam_info_m
   cam_info_msg.roi.x_offset = cam_info_msg.roi.y_offset = 0;
   cam_info_msg.roi.height = cam_info_msg.roi.width = 0;
 }
+
+void ArenaCameraNode::assignCameraIntrinsicParameters(sensor_msgs::CameraInfo& cam_info_K)
+{
+  auto focal_X = Arena::GetNodeValue<double>(pDevice_->GetNodeMap(), "CalibFocalLengthX");
+  auto focal_Y = Arena::GetNodeValue<double>(pDevice_->GetNodeMap(), "CalibFocalLengthY");
+  auto center_X = Arena::GetNodeValue<double>(pDevice_->GetNodeMap(), "CalibOpticalCenterX");
+  auto center_Y = Arena::GetNodeValue<double>(pDevice_->GetNodeMap(), "CalibOpticalCenterY");
+  //auto distort_val = Arena::GetNodeValue<double>(pDevice_->GetNodeMap(), "CalibLensDistortionValue");
+
+  cam_info_K.K[0] = focal_X;  // Focal length along x-axis
+  cam_info_K.K[2] = center_X;  // Principal point x-coordinate
+  cam_info_K.K[4] = focal_Y;  // Focal length along y-axis
+  cam_info_K.K[5] = center_Y;  // Principal point y-coordinate
+  cam_info_K.K[8] = 1.0; // Fixed value for a pinhole camera model
+
+  ROS_INFO("Camera Intrinsic Parameters successfully set!");
+}
+
 
 bool ArenaCameraNode::setROI(const sensor_msgs::RegionOfInterest target_roi, sensor_msgs::RegionOfInterest& reached_roi)
 {
