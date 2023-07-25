@@ -43,3 +43,4 @@ services:
     <<: *base-config
     # restart: always
     command: "/app/docker/docker_entrypoint.sh"
+    #command: sleep infinity
