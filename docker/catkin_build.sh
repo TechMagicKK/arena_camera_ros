@@ -26,5 +26,5 @@ cd $CATKIN_WS
 sh /app/ros_and_workspace_setup.sh
 
 source $HOME/.bashrc
-source /opt/ros/$1/setup.bash
 catkin build -j$(nproc)
+

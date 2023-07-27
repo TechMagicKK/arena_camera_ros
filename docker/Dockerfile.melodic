@@ -6,6 +6,7 @@ FROM ros:melodic-ros-base
 
 ARG ROS_VERSION=melodic
 ARG ROS_PYTHON=python
+ARG ROS_PYTHON_VERSION=python
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -69,15 +70,10 @@ RUN apt-get update && apt-get install -y --fix-missing \
     $ROS_PYTHON-osrf-pycommon $ROS_PYTHON-wstool \
     ros-$ROS_VERSION-roslint ros-$ROS_VERSION-catkin \
     ros-$ROS_VERSION-geometry ros-$ROS_VERSION-geometry2 \
-    ros-$ROS_VERSION-rqt-common-plugins
-
-
-###################################################################
-# Install ROS packages
-###################################################################
-# WORKDIR /root/catkin_ws/src
-# RUN rosdep update
-# RUN rosdep install -y --from-paths ./src --ignore-src -yri --rosdistro $ROS_VERSION
+    ros-$ROS_VERSION-rqt-common-plugins vim \
+    ros-$ROS_VERSION-camera-info-manager \
+    ros-$ROS_VERSION-diagnostic-updater \
+    ros-$ROS_VERSION-image-geometry
 
 
 ####################################################################
@@ -87,6 +83,7 @@ WORKDIR /app
 COPY . /app
 
 RUN /app/docker/catkin_build.sh $ROS_VERSION
+
 RUN python3 -m pip install --upgrade pip && \
     python3 -m pip install --no-cache-dir arena_api-2.3.3-py3-none-any.whl
 RUN pip3 install -r /app/docker/requirements.txt
