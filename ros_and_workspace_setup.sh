@@ -4,7 +4,7 @@
 # MAIN VARS TO CHANGE
 #
 ARENA_INSTALLATION_ROOT="/app/ArenaSDK_Linux_x64"
-ARENA_ROS_WORDSPACE_TO_SETUP="$HOME/catkin_ws" #change to workspace location
+ARENA_ROS_WORDSPACE_TO_SETUP="/root/catkin_ws" #change to workspace location
 INSTALL_ROS=1
 
 
@@ -53,6 +53,7 @@ if [ $INSTALL_ROS -eq 1 ]; then
     # sudo apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
     # Install ROS Desktop.
     # sudo apt-get update
+    apt-get update
     # sudo apt-get install ros-$ROS_DIS-desktop-full
     
     # Setup system dependencies for ROS.
@@ -96,7 +97,7 @@ fi
 # Set up your ARENA_ROOT environment variable. This
 # environment variable should be the path where you have
 # installed Arena SDK.
-echo "export ARENA_ROOT=$ARENA_INSTALLATION_ROOT" >> $HOME/.bashrc
+# echo "export ARENA_ROOT=$ARENA_INSTALLATION_ROOT" >> $HOME/.bashrc
 # echo "export ARENA_ROOT=$ARENA_INSTALLATION_ROOT">> ~/.zshrc
 # would not have an effect if script is not run in intractive mode
 # source $HOME/.bashrc

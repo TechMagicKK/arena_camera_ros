@@ -66,38 +66,41 @@ def save_png(img, png_name):
 
 
 def load_images():
-    img_depth = cv2.imread("depth.png", cv2.IMREAD_ANYDEPTH)
-    img_ir = cv2.imread("ir.png")
+    img_depth = cv2.imread("/app/depth.png", cv2.IMREAD_ANYDEPTH)
+    img_ir = cv2.imread("/app/ir.png")
     return img_depth, img_ir
 
 
-def send_data():
-    try:
-        client = paramiko.SSHClient()
-        client.load_system_host_keys()
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        client.connect("172.16.0.2", username="mnrobot2", key_filename="/root/tm_key")
-        scp = SCPClient(client.get_transport())
-        scp.put("/app/user_points.csv", remote_path="/home/mnrobot2/Work/mnrobot_core/mnrobot_arm/mnrobot_calibration/config")
-        scp.put("/app/cam2board_mat.npy", remote_path="/home/mnrobot2/Work/mnrobot_core/mnrobot_arm/mnrobot_calibration/config")
-        scp.close()
-        print("Sent data success.")
-    except:
-        print("Can not sent data calibrated result to MiniPC.")
+def send_data(remote):
+    if remote:
+        try:
+            client = paramiko.SSHClient()
+            client.load_system_host_keys()
+            client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            client.connect("172.16.0.2", username="mnrobot2", key_filename="/root/tm_key")
+            scp = SCPClient(client.get_transport())
+            scp.put("/app/user_points.csv", remote_path="/home/mnrobot2/Work/mnrobot_core/mnrobot_arm/mnrobot_calibration/config")
+            scp.put("/app/cam2board_mat.npy", remote_path="/home/mnrobot2/Work/mnrobot_core/mnrobot_arm/mnrobot_calibration/config")
+            scp.close()
+            print("Sent data success.")
+        except:
+            print("Can not sent data calibrated result to MiniPC.")
 
 
-def calibrate(img_ir, img_depth):
+def calibrate(img_ir, img_depth, remote):
     leveling = Redrawer(img_ir)
     leveling.adjust_ir()
     img_ir = leveling.get_adjusted_img()
 
     calib = CameraBoard(img_ir, img_depth)
-    calib.calibrate()
+    debug = calib.calibrate()
+    plt.imshow(debug)
+    plt.show()
 
     cl = ClickImage(img_ir)
     plt.show()
     cl.save()
-    send_data()
+    send_data(remote)
 
 @app.command()
 def load():
@@ -130,8 +133,8 @@ def capture():
         im1.set_data(img_ir)
     def save_images(event):
         print("saving images")
-        save_png(img_depth, "depth.png")
-        save_png(img_ir, "ir.png")
+        save_png(img_depth, "/app/depth.png")
+        save_png(img_ir, "/app/ir.png")
 
     axrecapture = plt.axes([0.81, 0.05, 0.1, 0.075])
     axsave = plt.axes([0.7, 0.05, 0.1, 0.075])
@@ -145,7 +148,7 @@ def capture():
     img_depth = np.array(img_depth, dtype=np.float32)
     img_ir = (img_ir - img_ir.min())/(img_ir.max()-img_ir.min()) * 255.0
     #img_ir = cv2.cvtColor(img_ir, cv2.COLOR_BGR2GRAY)
-    calibrate(img_ir, img_depth)
+    calibrate(img_ir, img_depth, False)
 
 
 if __name__ == "__main__":

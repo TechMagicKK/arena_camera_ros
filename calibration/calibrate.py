@@ -33,6 +33,18 @@ class CameraBoard():
         if ret:
             # refining pixel coordinates for given 2d points.
             corners2 = cv.cornerSubPix(self._mono_data, corners, (5, 5), (-1, -1), (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001))
+            debug_data = self._mono_data.copy()
+            debug_data = cv.cvtColor(debug_data, cv.COLOR_GRAY2RGBA)
+            cv.drawChessboardCorners(debug_data, (7,7), corners2, True)
+            for i, c in enumerate(corners2):
+                cv.putText(debug_data,
+                        text=str(i),
+                        org=(c[0][0], c[0][1]),
+                        fontFace=cv.FONT_HERSHEY_SIMPLEX,
+                        fontScale=.5,
+                        color=(0, 255, 0),
+                        thickness=1,
+                        lineType=cv.LINE_4)
 
             uv_point1 = corners2[41][0]
             uv_point2 = corners2[36][0]
@@ -45,7 +57,8 @@ class CameraBoard():
             cy = CameraBoard.CAM_INTRINSIC[1][2]
 
             # calculate x, y of translation matrix.
-            tz = self._depth_data[int(uv_point1[1]), int(uv_point1[0])] * 0.001
+            # tz = self._depth_data[int(uv_point1[1]), int(uv_point1[0])] * 0.001
+            tz = np.mean(self._depth_data[int(uv_point1[1])-5:int(uv_point1[1])+5, int(uv_point1[0])-5:int(uv_point1[0])+5]) * 0.001
             tx = (uv_point1[0] - cx) / fx * tz
             ty = (uv_point1[1] - cy) / fy * tz
 
@@ -66,6 +79,7 @@ class CameraBoard():
             cam2board_mat[3][3] = 1
             print(f"camera to board matrix: \n{cam2board_mat}\n")
             np.save("/app/cam2board_mat.npy", cam2board_mat)
+            return debug_data
 
         else:
             print("Can not find any corner !!!")
