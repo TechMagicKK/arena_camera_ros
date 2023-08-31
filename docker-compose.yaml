@@ -20,13 +20,13 @@ x-container: &base-config
   env_file:
   - .env
 
-  deploy:
-    resources:
-      reservations:
-        devices:
-          - driver: nvidia
-            count: 1
-            capabilities: [gpu]
+    #  deploy:
+    #resources:
+    #  reservations:
+    #    devices:
+    #      - driver: nvidia
+    #        count: 1
+    #        capabilities: [gpu]
 
   volumes:
     - "/tmp/.X11-unix:/tmp/.X11-unix"
@@ -36,11 +36,11 @@ x-container: &base-config
 services:
   calibrate:
     <<: *base-config
-    # command: sleep infinity
+    #command: sleep infinity
     command: python3 /app/calibration/main.py capture
 
   driver:
     <<: *base-config
     # restart: always
+    # command: sleep infinity
     command: "/app/docker/docker_entrypoint.sh"
-    #command: sleep infinity

@@ -13,7 +13,7 @@ class HeliosCamera:
         if self.device is not None:
             system.destroy_device()
 
-    @retry(stop=stop_after_attempt(1), wait=wait_fixed(10))
+    #@retry(stop=stop_after_attempt(1), wait=wait_fixed(10))
     def connect_device(self):
         if self.device is None:
             devices = system.create_device()
